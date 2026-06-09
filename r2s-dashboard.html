@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>R2S Stock Alert — SASOM</title>
+  <style>
+    :root {
+      --bg: #111111;
+      --surface: #1a1a1a;
+      --surface2: #222222;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --muted: #666666;
+      --muted2: #444444;
+      --accent: #c8ff00;
+      --accent-dark: #9fcc00;
+      --red: #ff3b3b;
+      --orange: #ff8c00;
+      --yellow: #ffd600;
+      --green: #00e676;
+      --blue: #448aff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      font-size: 13px;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-img {
+      height: 24px;
+      width: auto;
+      filter: brightness(0) invert(1);
+    }
+    .logo-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .date-tag {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+    .sync-tag {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .refresh-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.15s, opacity 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .refresh-btn:hover { background: var(--accent-dark); }
+    .refresh-btn:disabled { opacity: 0.6; cursor: default; }
+    .sync-icon {
+      width: 13px; height: 13px;
+      animation: none;
+    }
+    .syncing .sync-icon { animation: spin 0.7s linear infinite; }
+
+    /* ── SUMMARY BAR ── */
+    .summary-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: #1c1c1c;
+      border: 1px solid #2a2a2a;
+      color: #444;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+    }
+    .chip:hover { border-color: #555; color: #888; }
+    .chip.active {
+      background: #2e2e2e;
+      border-color: #555;
+      color: #fff;
+    }
+    .chip-num { font-weight: 700; font-size: 13px; }
+
+    /* ── MAIN ── */
+    main { padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── SECTION ── */
+    .section {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .section-label .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-red    { background: var(--red); }
+    .dot-orange { background: var(--orange); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-green  { background: var(--green); }
+    .dot-blue   { background: var(--blue); }
+
+    .count-badge {
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th {
+      padding: 8px 14px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface2);
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    th.num, td.num { text-align: right; }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #1e1e1e;
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.025); }
+
+    .rank {
+      font-size: 11px;
+      color: var(--muted2);
+      font-weight: 700;
+      width: 24px;
+    }
+    .sku {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .name { font-weight: 500; color: #ddd; font-size: 12px; }
+    .sold { color: var(--muted); font-size: 11px; }
+
+    .restock {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--orange);
+      white-space: nowrap;
+    }
+    .restock.zero { color: var(--muted2); }
+
+    .days { font-size: 12px; white-space: nowrap; }
+    .days.d0  { color: var(--red); font-weight: 700; }
+    .days.d5  { color: var(--orange); font-weight: 600; }
+    .days.d10 { color: var(--yellow); }
+    .days.ok  { color: var(--muted); }
+
+    .incoming-qty { color: var(--blue); font-weight: 700; font-size: 12px; }
+
+    /* ── EMPTY / LOADING ── */
+    .state {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── LEFT ACCENT ── */
+    .section.s-red    .section-head { border-left: 3px solid var(--red); }
+    .section.s-orange .section-head { border-left: 3px solid var(--orange); }
+    .section.s-yellow .section-head { border-left: 3px solid var(--yellow); }
+    .section.s-green  .section-head { border-left: 3px solid var(--green); }
+    .section.s-blue   .section-head { border-left: 3px solid var(--blue); }
+
+    /* ── SCROLLABLE TABLE ── */
+    .table-wrap { overflow-x: auto; }
+
+    /* ── INTERNAL BADGE ── */
+    .internal-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      color: #ff3b3b;
+      border: 1px solid #ff3b3b55;
+      background: #ff3b3b12;
+      animation: badge-blink 0.6s step-start 5 forwards;
+    }
+    @keyframes badge-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+    @media (max-width: 700px) {
+      .internal-badge { font-size: 9px; padding: 2px 6px; }
+    }
+
+    /* ── TABS ── */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 10px 14px 9px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      text-transform: uppercase;
+    }
+    .tab-btn:hover { color: #aaa; }
+    .tab-btn.active { color: #fff; border-bottom-color: var(--accent); }
+
+    /* ── DASHBOARD ── */
+    .dash-container { padding: 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .kpi-label { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+    .kpi-value { font-size: 28px; font-weight: 700; line-height: 1; }
+    .kpi-sub   { font-size: 10px; color: var(--muted); }
+    .chart-row { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+    .chart-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .chart-title { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .chart-canvas-wrap { position: relative; }
+    .chart-h { height: 260px; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 700px) {
+      /* Header */
+      header { padding: 0 16px; height: 48px; }
+      .sync-tag { display: none; }
+      .date-tag { font-size: 11px; padding: 4px 8px; }
+      .logo-title { font-size: 11px; letter-spacing: 0.5px; }
+      .refresh-btn { padding: 5px 12px; font-size: 11px; gap: 4px; }
+      .sync-icon { width: 11px; height: 11px; }
+
+      /* Tabs */
+      .tab-bar { padding: 0 16px; }
+      .tab-btn { padding: 9px 12px 8px; font-size: 11px; }
+
+      /* Summary chips */
+      .summary-bar { padding: 8px 16px; gap: 6px; }
+      .chip { padding: 5px 10px; font-size: 11px; }
+      .chip-num { font-size: 12px; }
+
+      /* Alerts main */
+      main { padding: 12px 16px; gap: 10px; }
+      .section-head { padding: 10px 12px; }
+      .section-label { font-size: 11px; }
+
+      /* Tables — horizontal scroll, tighter cells */
+      th { padding: 7px 10px; font-size: 9px; }
+      td { padding: 8px 10px; font-size: 11px; }
+      .sku { font-size: 9px; padding: 1px 5px; }
+      .name { font-size: 11px; }
+
+      /* Dashboard container */
+      .dash-container { padding: 12px 16px; gap: 12px; }
+
+      /* KPI cards — 2 per row */
+      .kpi-row { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+      .kpi-card { padding: 12px 10px; gap: 4px; }
+      .kpi-value { font-size: 22px; }
+      .kpi-label { font-size: 9px; }
+      .kpi-sub   { font-size: 9px; }
+
+      /* Charts — single column, shorter height */
+      .chart-row { grid-template-columns: 1fr; gap: 12px; }
+      .chart-box { padding: 12px; }
+      .chart-h { height: 200px !important; }
+      .chart-title { font-size: 10px; margin-bottom: 10px; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <img class="logo-img" src="https://d2cva83hdk3bwc.cloudfront.net/SASOM_PRIMARY_BK.png" alt="SASOM" onerror="this.src='https://d2cva83hdk3bwc.cloudfront.net/SASOM_LOGO_BLACK.png'" />
+    <div class="logo-title">R2S Stock Alert</div>
+    <span class="internal-badge">‼️ SASOM Internal Only (DON'T SHARE) ‼️</span>
+  </div>
+  <div class="header-right">
+    <div class="date-tag" id="dateBadge">—</div>
+    <div class="sync-tag" id="syncTag"></div>
+    <button class="refresh-btn" id="syncBtn" onclick="loadData()">
+      <svg class="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Sync
+    </button>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" id="tabAlerts" onclick="switchTab('alerts')">Alerts</button>
+  <button class="tab-btn" id="tabDashboard" onclick="switchTab('dashboard')">Dashboard</button>
+</div>
+
+<div id="alertsView">
+  <div class="summary-bar" id="summaryBar">
+    <div class="state"><span class="spinner"></span>Loading...</div>
+  </div>
+  <main id="main"></main>
+</div>
+
+<div id="dashboardView" style="display:none">
+  <div class="dash-container" id="dashContent">
+    <div class="state"><span class="spinner"></span>Loading...</div>
+  </div>
+</div>
+
+<script>
+const CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRtLzro-DJNIqXym2sqHRLnuVx2k0y_pj_YpGoSkSXILJ4QczTg9FK4a3zR-gW4pXYg7CPhIqkQ78zn/pub?gid=0&single=true&output=csv';
+const SCRIPT = 'https://script.google.com/macros/s/AKfycbwJs99-F3pZI41pPSvkTdCH2aamPwzaq_5YEKGPQMBIG1jV4xEx4h9O5vMG7moLJV6U/exec';
+
+let _cache = null; // global data store for dashboard
+let _pieChart = null, _barChart = null;
+
+function switchTab(tab) {
+  const isAlerts = tab === 'alerts';
+  document.getElementById('alertsView').style.display = isAlerts ? '' : 'none';
+  document.getElementById('dashboardView').style.display = isAlerts ? 'none' : '';
+  document.getElementById('tabAlerts').classList.toggle('active', isAlerts);
+  document.getElementById('tabDashboard').classList.toggle('active', !isAlerts);
+  if (!isAlerts && _cache) renderDashboard(_cache);
+}
+
+function renderDashboard({ soldOut, low, watch, inStock, incoming }) {
+  const total = soldOut.length + low.length + watch.length + inStock.length + incoming.length;
+  const totalSold = [...soldOut, ...low, ...watch, ...inStock].reduce((s,r) => s + n(r,'Sold Order L30D'), 0);
+  const totalRestock = [...soldOut, ...low, ...watch].reduce((s,r) => s + restock(r), 0);
+
+  const kpis = [
+    { label:'Sold Out', value: soldOut.length, sub:'need restock now', color:'var(--red)',    key:'soldout'  },
+    { label:'Low Stock', value: low.length,    sub:'under 5 days',     color:'var(--orange)', key:'low'      },
+    { label:'Watch',     value: watch.length,  sub:'under 10 days',    color:'var(--yellow)', key:'watch'    },
+    { label:'In Stock',  value: inStock.length,sub:'healthy',          color:'var(--green)',  key:'instock'  },
+    { label:'In Coming', value: incoming.length,sub:'incoming stock',  color:'var(--blue)',   key:'incoming' },
+  ];
+
+  document.getElementById('dashContent').innerHTML = `
+    <div class="kpi-row">
+      ${kpis.map(k => `
+        <div class="kpi-card" style="cursor:pointer" onclick="goToAlert('${k.key}')">
+          <div class="kpi-label">${k.label}</div>
+          <div class="kpi-value" style="color:${k.color}">${k.value}</div>
+          <div class="kpi-sub">${k.sub}</div>
+        </div>`).join('')}
+    </div>
+    <div class="kpi-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi-card">
+        <div class="kpi-label">Total SKUs Monitored</div>
+        <div class="kpi-value" style="color:#fff">${total}</div>
+        <div class="kpi-sub">across all statuses</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Sold (L30D)</div>
+        <div class="kpi-value" style="color:var(--accent)">${totalSold.toLocaleString()}</div>
+        <div class="kpi-sub">units in last 30 days</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Restock Needed</div>
+        <div class="kpi-value" style="color:var(--orange)">${totalRestock.toLocaleString()}</div>
+        <div class="kpi-sub">units to order</div>
+      </div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-box">
+        <div class="chart-title">SKU Distribution</div>
+        <div class="chart-canvas-wrap chart-h">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Top 10 SKUs by Sales (L30D)</div>
+        <div class="chart-canvas-wrap chart-h">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Destroy old charts to avoid canvas reuse error
+  if (_pieChart) { _pieChart.destroy(); _pieChart = null; }
+  if (_barChart) { _barChart.destroy(); _barChart = null; }
+
+  // Pie chart
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  _pieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Sold Out','Low','Watch','In Stock','In Coming'],
+      datasets: [{
+        data: [soldOut.length, low.length, watch.length, inStock.length, incoming.length],
+        backgroundColor: ['#ff3b3b','#ff8c00','#ffd600','#00e676','#448aff'],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { position:'bottom', labels:{ color:'#aaa', font:{size:11}, padding:14 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} SKU` } }
+      }
+    }
+  });
+
+  // Bar chart — top 10 by sold L30D (across all non-incoming categories)
+  const allSkuRaw = [...soldOut, ...low, ...watch, ...inStock]
+    .sort((a,b) => n(b,'Sold Order L30D') - n(a,'Sold Order L30D'))
+    .slice(0, 10);
+  // Map each row to its section key for click navigation
+  const skuSection = r => {
+    if (soldOut.includes(r)) return 'soldout';
+    if (low.includes(r)) return 'low';
+    if (watch.includes(r)) return 'watch';
+    return 'instock';
+  };
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  _barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: allSkuRaw.map(r => shortName(r)),
+      datasets: [{
+        label: 'Sold L30D',
+        data: allSkuRaw.map(r => n(r,'Sold Order L30D')),
+        backgroundColor: '#c8ff0066',
+        borderColor: '#c8ff00',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => allSkuRaw[ctx[0].dataIndex]['SKU'],
+            label: ctx => ` Sold L30D: ${ctx.parsed.x.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: { grid:{ color:'#222' }, ticks:{ color:'#666', font:{size:10} } },
+        y: { grid:{ display:false }, ticks:{ color:'#aaa', font:{size:10}, maxRotation:0 } }
+      },
+      onClick: (evt, elements) => {
+        if (elements.length > 0) {
+          goToAlert(skuSection(allSkuRaw[elements[0].index]));
+        }
+      },
+      onHover: (evt, elements) => {
+        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      }
+    }
+  });
+}
+
+function parseCSV(txt) {
+  const lines = txt.trim().split('\n');
+  const hdr = splitLine(lines[0]);
+  return lines.slice(1).map(l => {
+    const v = splitLine(l);
+    const o = {};
+    hdr.forEach((h, i) => o[h.trim().replace(/"/g,'')] = (v[i]||'').trim().replace(/"/g,''));
+    return o;
+  }).filter(r => r['SKU']);
+}
+
+function splitLine(line) {
+  const res = []; let cur = '', q = false;
+  for (const c of line) {
+    if (c === '"') q = !q;
+    else if (c === ',' && !q) { res.push(cur); cur = ''; }
+    else cur += c;
+  }
+  res.push(cur);
+  return res;
+}
+
+const n = (r, k) => parseFloat(r[k]) || 0;
+
+function categorize(rows) {
+  const soldOut=[], low=[], watch=[], inStock=[], incoming=[];
+  rows.forEach(r => {
+    const v2   = n(r,'Total R2S Live V2');
+    const days = n(r,'Live Days Remaining');
+    const inc  = n(r,'Incoming WMS Quantity');
+    const sold = n(r,'Sold Order L30D');
+    if (sold === 0) return;
+    if (inc > 0) incoming.push(r);
+    if (v2 === 0 || days === 0) soldOut.push(r);
+    else if (days < 5)  low.push(r);
+    else if (days < 10) watch.push(r);
+    else inStock.push(r);
+  });
+  const byS = a => [...a].sort((x,y) => n(y,'Sold Order L30D')-n(x,'Sold Order L30D')).slice(0,10);
+  const byI = a => [...a].sort((x,y) => n(y,'Incoming WMS Quantity')-n(x,'Incoming WMS Quantity')).slice(0,10);
+  return { soldOut:byS(soldOut), low:byS(low), watch:byS(watch), inStock:byS(inStock), incoming:byI(incoming) };
+}
+
+function restock(r) {
+  return Math.max(0, Math.ceil(n(r,'Final Supply Target Unit') - n(r,'Total R2S Live V2') - n(r,'Incoming WMS Quantity')));
+}
+
+function daysClass(d) {
+  if (d === 0) return 'd0';
+  if (d < 5)  return 'd5';
+  if (d < 10) return 'd10';
+  return 'ok';
+}
+
+function tableStock(rows) {
+  if (!rows.length) return '<div class="state">No items</div>';
+  return `<div class="table-wrap"><table>
+    <colgroup>
+      <col style="width:40px"><col style="width:160px"><col><col style="width:100px"><col style="width:110px"><col style="width:100px">
+    </colgroup>
+    <thead><tr>
+      <th>#</th><th>SKU</th><th>Product Name</th>
+      <th class="num">Sold 30D</th><th class="num">Restock</th><th class="num">Days Left</th>
+    </tr></thead>
+    <tbody>${rows.map((r,i) => {
+      const d = Math.floor(n(r,'Live Days Remaining'));
+      const rs = restock(r);
+      return `<tr>
+        <td class="rank">${i+1}</td>
+        <td><span class="sku" title="${r['SKU']}">${r['SKU']}</span></td>
+        <td class="name" title="${r['Product Name']}">${r['Product Name']}</td>
+        <td class="sold num">${n(r,'Sold Order L30D').toLocaleString()}</td>
+        <td class="num"><span class="restock${rs===0?' zero':''}">⚠️ +${rs}</span></td>
+        <td class="num"><span class="days ${daysClass(d)}">⏳ ${d}d</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function tableInStock(rows) {
+  if (!rows.length) return '<div class="state">No items</div>';
+  return `<div class="table-wrap"><table>
+    <colgroup>
+      <col style="width:40px"><col style="width:160px"><col><col style="width:100px"><col style="width:100px">
+    </colgroup>
+    <thead><tr>
+      <th>#</th><th>SKU</th><th>Product Name</th>
+      <th class="num">Sold 30D</th><th class="num">Days Left</th>
+    </tr></thead>
+    <tbody>${rows.map((r,i) => {
+      const d = Math.floor(n(r,'Live Days Remaining'));
+      return `<tr>
+        <td class="rank">${i+1}</td>
+        <td><span class="sku" title="${r['SKU']}">${r['SKU']}</span></td>
+        <td class="name" title="${r['Product Name']}">${r['Product Name']}</td>
+        <td class="sold num">${n(r,'Sold Order L30D').toLocaleString()}</td>
+        <td class="num"><span class="days ok">⏳ ${d}d</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function tableIncoming(rows) {
+  if (!rows.length) return '<div class="state">No items</div>';
+  return `<div class="table-wrap"><table>
+    <colgroup>
+      <col style="width:40px"><col style="width:160px"><col><col style="width:100px"><col style="width:120px">
+    </colgroup>
+    <thead><tr>
+      <th>#</th><th>SKU</th><th>Product Name</th>
+      <th class="num">Sold 30D</th><th class="num">Incoming Qty</th>
+    </tr></thead>
+    <tbody>${rows.map((r,i) => `<tr>
+        <td class="rank">${i+1}</td>
+        <td><span class="sku" title="${r['SKU']}">${r['SKU']}</span></td>
+        <td class="name" title="${r['Product Name']}">${r['Product Name']}</td>
+        <td class="sold num">${n(r,'Sold Order L30D').toLocaleString()}</td>
+        <td class="num"><span class="incoming-qty">📦 ${n(r,'Incoming WMS Quantity').toLocaleString()}</span></td>
+      </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+
+function shortName(r) {
+  const raw = r['Product Name'] || r['SKU'] || '';
+  // Strip bracketed prefixes like "[OP-09]" and "(ราคา...)" notes
+  let s = raw.replace(/\(ราคา[^)]*\)/g,'').replace(/\s+/g,' ').trim();
+  return s.length > 32 ? s.slice(0, 30) + '…' : s;
+}
+
+function goToAlert(key) {
+  switchTab('alerts');
+  setTimeout(() => {
+    const el = document.querySelector(`[data-section="${key}"]`);
+    if (el) { el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+  }, 60);
+}
+
+function toggleChip(el) {
+  const key = el.dataset.key;
+  const activeChips = document.querySelectorAll('.chip.active');
+  // If clicking the only active chip, don't deactivate (keep at least 1 visible)
+  if (el.classList.contains('active') && activeChips.length === 1) return;
+  el.classList.toggle('active');
+  const isActive = el.classList.contains('active');
+  const section = document.querySelector(`[data-section="${key}"]`);
+  if (section) section.style.display = isActive ? '' : 'none';
+}
+
+async function loadData() {
+  const btn = document.getElementById('syncBtn');
+  if (btn) { btn.disabled = true; btn.classList.add('syncing'); }
+  document.getElementById('summaryBar').innerHTML = '<div class="state"><span class="spinner"></span>Syncing...</div>';
+  document.getElementById('main').innerHTML = '';
+  try {
+    let rows;
+    try {
+      const res = await fetch(SCRIPT + '?_=' + Date.now(), {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' }
+      });
+      const json = await res.json();
+      rows = Array.isArray(json) ? json : (json.data || []);
+      rows = rows.filter(r => r['SKU']);
+    } catch(e) {
+      // Fallback to CSV
+      const res = await fetch(CSV + '&_=' + Date.now(), { cache: 'no-store' });
+      const txt = await res.text();
+      rows = parseCSV(txt);
+    }
+    const { soldOut, low, watch, inStock, incoming } = categorize(rows);
+    _cache = { soldOut, low, watch, inStock, incoming };
+
+    const now = new Date();
+    document.getElementById('dateBadge').textContent = '🗓️ ' + fmtDate(now);
+    document.getElementById('syncTag').textContent = 'Synced ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+    const chipDefs = [
+      { key:'soldout',  emoji:'🔴', label:'Sold Out',  count:soldOut.length  },
+      { key:'low',      emoji:'🟠', label:'Low',       count:low.length      },
+      { key:'watch',    emoji:'🟡', label:'Watch',     count:watch.length    },
+      { key:'instock',  emoji:'🟢', label:'In Stock',  count:inStock.length  },
+      { key:'incoming', emoji:'🔵', label:'In Coming', count:incoming.length },
+    ];
+    document.getElementById('summaryBar').innerHTML = chipDefs.map(c =>
+      `<div class="chip active" data-key="${c.key}" onclick="toggleChip(this)">
+        <span>${c.emoji}</span> ${c.label} <span class="chip-num">${c.count}</span> SKU
+       </div>`
+    ).join('');
+
+    const sections = [
+      { key:'soldout',  cls:'s-red',    dot:'dot-red',    emoji:'🔴', title:'SOLD OUT',   sub:'restock now',   data:soldOut,  type:'stock'    },
+      { key:'low',      cls:'s-orange', dot:'dot-orange', emoji:'🟠', title:'LOW',        sub:'under 5 days',  data:low,      type:'stock'    },
+      { key:'watch',    cls:'s-yellow', dot:'dot-yellow', emoji:'🟡', title:'WATCH',      sub:'under 10 days', data:watch,    type:'stock'    },
+      { key:'instock',  cls:'s-green',  dot:'dot-green',  emoji:'🟢', title:'IN STOCK',   sub:'',              data:inStock,  type:'instock'  },
+      { key:'incoming', cls:'s-blue',   dot:'dot-blue',   emoji:'🔵', title:'IN COMING',  sub:'',              data:incoming, type:'incoming' },
+    ];
+
+    document.getElementById('main').innerHTML = sections.map(s => `
+      <div class="section ${s.cls}" data-section="${s.key}">
+        <div class="section-head">
+          <div class="section-label">
+            <span class="dot ${s.dot}"></span>
+            ${s.title}${s.sub ? ` <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">— ${s.sub}</span>` : ''}
+          </div>
+          <span class="count-badge">${s.data.length} items</span>
+        </div>
+        ${s.type==='stock' ? tableStock(s.data) : s.type==='instock' ? tableInStock(s.data) : tableIncoming(s.data)}
+      </div>`).join('');
+
+  } catch(e) {
+    document.getElementById('summaryBar').innerHTML = '';
+    document.getElementById('main').innerHTML = `<div class="state" style="color:var(--red)">❌ Failed to load: ${e.message}</div>`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove('syncing'); }
+  }
+}
+
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
