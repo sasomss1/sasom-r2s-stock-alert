@@ -343,12 +343,21 @@
 
     /* ── MOBILE ── */
     @media (max-width: 700px) {
-      /* Header */
-      header { padding: 0 16px; height: 48px; }
+      /* Header — 2 rows on mobile */
+      header {
+        padding: 8px 16px;
+        height: auto;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .logo { width: 100%; justify-content: flex-start; }
+      .header-right { width: 100%; justify-content: flex-start; gap: 8px; }
       .sync-tag { display: none; }
-      .date-tag { font-size: 11px; padding: 4px 8px; }
+      .date-tag { font-size: 10px; padding: 3px 8px; }
       .logo-title { font-size: 11px; letter-spacing: 0.5px; }
-      .refresh-btn { padding: 5px 12px; font-size: 11px; gap: 4px; }
+      .internal-badge { font-size: 9px; padding: 2px 6px; }
+      .refresh-btn { padding: 4px 12px; font-size: 11px; gap: 4px; }
       .sync-icon { width: 11px; height: 11px; }
 
       /* Tabs */
@@ -368,10 +377,13 @@
       /* Tables — let them scroll freely, no forced compression */
       table { table-layout: auto !important; min-width: 480px; }
       col { width: auto !important; }
-      th { padding: 7px 10px; font-size: 9px; white-space: nowrap; }
-      td { padding: 8px 10px; font-size: 11px; white-space: nowrap; }
-      .sku { font-size: 9px; padding: 1px 5px; }
-      .name { white-space: nowrap; }
+      th { padding: 6px 8px; font-size: 9px; white-space: nowrap; }
+      td { padding: 7px 8px; font-size: 10px; white-space: nowrap; }
+      .sku { font-size: 9px; padding: 1px 4px; }
+      .name { font-size: 10px; white-space: nowrap; }
+      .sold { font-size: 10px; }
+      .restock { font-size: 10px; }
+      .days { font-size: 10px; }
 
       /* Dashboard container */
       .dash-container { padding: 12px 16px; gap: 12px; }
