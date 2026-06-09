@@ -739,16 +739,21 @@ async function loadData() {
   document.getElementById('main').innerHTML = '';
   try {
     let rows;
+    let dataSource = '';
     try {
       const res = await fetch(SCRIPT + '?_=' + Date.now(), {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache, no-store' }
       });
+      if (!res.ok) throw new Error('Script HTTP ' + res.status);
       const json = await res.json();
+      if (!Array.isArray(json) && !json.data) throw new Error('Unexpected response: ' + JSON.stringify(json).slice(0,100));
       rows = Array.isArray(json) ? json : (json.data || []);
       rows = rows.filter(r => r['SKU']);
+      dataSource = 'script';
     } catch(e) {
-      // Fallback to CSV
+      console.warn('Apps Script failed, falling back to CSV:', e.message);
+      dataSource = 'csv (fallback: ' + e.message + ')';
       const res = await fetch(CSV + '&_=' + Date.now(), { cache: 'no-store' });
       const txt = await res.text();
       rows = parseCSV(txt);
@@ -758,7 +763,7 @@ async function loadData() {
 
     const now = new Date();
     document.getElementById('dateBadge').textContent = '🗓️ ' + fmtDate(now);
-    document.getElementById('syncTag').textContent = 'Synced ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('syncTag').textContent = 'Synced ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + (dataSource === 'script' ? '' : ' ⚠️ CSV');
 
     const chipDefs = [
       { key:'soldout',  emoji:'🔴', label:'Sold Out',  count:soldOut.length  },
