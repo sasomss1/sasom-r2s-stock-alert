@@ -742,8 +742,7 @@ async function loadData() {
     let dataSource = '';
     try {
       const res = await fetch(SCRIPT + '?_=' + Date.now(), {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store' }
+        cache: 'no-store'
       });
       if (!res.ok) throw new Error('Script HTTP ' + res.status);
       const json = await res.json();
