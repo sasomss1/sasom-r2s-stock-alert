@@ -374,9 +374,9 @@
       .section-head { padding: 10px 12px; }
       .section-label { font-size: 11px; }
 
-      /* Tables — scroll freely, fixed widths only on small cols */
-      table { table-layout: auto !important; min-width: 620px; width: 620px; }
-      col { width: auto !important; }
+      /* Tables — fixed layout so colgroup % applies, scroll horizontally */
+      table { table-layout: fixed !important; min-width: 620px; width: 620px; }
+      col { width: auto; }
       th { padding: 6px 8px; font-size: 9px; white-space: nowrap; }
       td { padding: 7px 8px; font-size: 10px; white-space: nowrap; }
       .rank { width: 24px; }
