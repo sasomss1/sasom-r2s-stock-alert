@@ -394,9 +394,9 @@
       .chart-h { height: 220px !important; }
       .chart-title { font-size: 10px; margin-bottom: 10px; }
 
-      /* KPI cards — 2 per row */
-      .kpi-row { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
-      .kpi-card { padding: 12px 10px; gap: 4px; }
+      /* KPI cards — flex wrap, always equal width */
+      .kpi-row { display: flex !important; flex-wrap: wrap; gap: 8px; }
+      .kpi-row .kpi-card { flex: 0 0 calc(50% - 4px); box-sizing: border-box; padding: 12px 10px; gap: 4px; }
       .kpi-value { font-size: 22px; }
       .kpi-label { font-size: 9px; }
       .kpi-sub   { font-size: 9px; }
