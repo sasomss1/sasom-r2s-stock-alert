@@ -374,17 +374,14 @@
       .section-head { padding: 10px 12px; }
       .section-label { font-size: 11px; }
 
-      /* Tables — let them scroll freely, consistent column sizes */
-      table { table-layout: fixed !important; min-width: 560px; }
+      /* Tables — scroll freely, fixed widths only on small cols */
+      table { table-layout: auto !important; min-width: 620px; width: 620px; }
       col { width: auto !important; }
-      /* Force all tables to same column widths regardless of column count */
       th { padding: 6px 8px; font-size: 9px; white-space: nowrap; }
-      td { padding: 7px 8px; font-size: 10px; }
-      td:nth-child(1) { width: 28px; }
-      td:nth-child(2) { width: 100px; }
-      td:nth-child(3) { width: 220px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .sku { font-size: 9px; padding: 1px 4px; }
-      .name { font-size: 10px; white-space: nowrap; }
+      td { padding: 7px 8px; font-size: 10px; white-space: nowrap; }
+      .rank { width: 24px; }
+      .sku { font-size: 9px; padding: 1px 4px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+      .name { font-size: 10px; }
       .sold { font-size: 10px; }
       .restock { font-size: 10px; }
       .days { font-size: 10px; }
